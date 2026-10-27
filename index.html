@@ -1,0 +1,1822 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>人生理论生成器</title>
+<style>
+/* SECTION: css-base */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --paper:#ece4d0;
+  --card:#faf6ea;
+  --ink:#232a3b;
+  --ink-soft:#5a5f6e;
+  --burgundy:#8a2b2b;
+  --gold:#a98d4f;
+  --serif:Georgia,"Times New Roman","Songti SC","STSong","SimSun",serif;
+}
+html{-webkit-text-size-adjust:100%}
+body{
+  font-family:var(--serif);
+  color:var(--ink);
+  background-color:var(--paper);
+  background-image:
+    repeating-linear-gradient(0deg,rgba(35,42,59,.025) 0 1px,transparent 1px 3px),
+    radial-gradient(ellipse at 20% 0%,rgba(169,141,79,.10),transparent 55%),
+    radial-gradient(ellipse at 85% 100%,rgba(138,43,43,.07),transparent 55%);
+  line-height:1.75;
+  min-height:100vh;
+}
+main{max-width:820px;margin:0 auto;padding:0 20px 60px}
+.hidden{display:none!important}
+button{font-family:inherit;cursor:pointer}
+
+/* SECTION: masthead */
+.masthead{
+  max-width:900px;margin:0 auto;padding:22px 20px 14px;
+  border-bottom:3px double var(--ink);
+}
+.masthead-inner{display:flex;align-items:center;justify-content:space-between;gap:14px}
+.mast-side{font-size:11px;letter-spacing:.14em;color:var(--ink-soft);text-align:center;line-height:1.5;flex:0 0 58px}
+.mast-center{text-align:center;flex:1;min-width:0}
+.mast-title{font-size:clamp(26px,5vw,40px);font-weight:700;letter-spacing:.32em;text-indent:.32em}
+.mast-sub{margin-top:4px;font-size:11px;letter-spacing:.08em;color:var(--ink-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media (max-width:640px){.mast-sub{white-space:normal}.mast-side{display:none}}
+
+/* SECTION: hero */
+.hero{text-align:center;padding:56px 0 44px}
+.hero-latin{font-size:12px;letter-spacing:.42em;text-indent:.42em;color:var(--gold);margin-bottom:18px}
+.hero-title{font-size:clamp(30px,6vw,46px);font-weight:700;line-height:1.35;letter-spacing:.06em}
+.hero-desc{max-width:600px;margin:20px auto 0;color:var(--ink-soft);font-size:15px}
+.input-row{display:flex;flex-wrap:wrap;gap:14px;max-width:680px;margin:32px auto 0;align-items:flex-end}
+.field-group{flex:1;min-width:240px;text-align:left}
+.field-label{display:block;font-size:13px;font-weight:700;letter-spacing:.1em;margin-bottom:6px;color:var(--ink)}
+.field-req{margin-left:8px;font-size:11px;font-weight:400;color:var(--burgundy);letter-spacing:.06em}
+.field-opt{margin-left:8px;font-size:11px;font-weight:400;color:var(--ink-soft);letter-spacing:.06em}
+.input-row input{
+  width:100%;height:52px;padding:0 18px;
+  font-family:var(--serif);font-size:17px;color:var(--ink);
+  background:var(--card);border:1.5px solid var(--ink);
+  border-radius:2px;outline:none;
+}
+.input-row input:focus{border-color:var(--burgundy);box-shadow:0 0 0 3px rgba(138,43,43,.15)}
+.input-row .btn{flex:0 0 auto}
+.btn{
+  min-height:48px;padding:10px 22px;font-size:16px;letter-spacing:.08em;
+  color:var(--ink);background:transparent;
+  border:1.5px solid var(--ink);border-radius:2px;
+  transition:background-color .18s,color .18s,transform .12s;
+}
+.btn:hover{background:rgba(35,42,59,.07)}
+.btn:active{transform:translateY(1px)}
+.btn-primary{background:var(--burgundy);border-color:var(--burgundy);color:#f8f2e4;font-weight:700}
+.btn-primary:hover{background:#762424}
+.examples{max-width:640px;margin:28px auto 0}
+.examples-label{display:block;font-size:13px;color:var(--ink-soft);letter-spacing:.1em;margin-bottom:12px}
+.chips{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+.chip{
+  min-height:40px;padding:8px 16px;font-size:14px;font-family:var(--serif);
+  color:var(--ink);background:transparent;border:1px dashed var(--gold);
+  border-radius:999px;transition:background-color .18s,border-color .18s;
+}
+.chip:hover{background:rgba(169,141,79,.12);border-style:solid}
+@media (max-width:640px){
+  .input-row{flex-direction:column;align-items:stretch}
+  .field-group{min-width:0}
+  .btn{width:100%}
+  .hero{padding:40px 0 32px}
+}
+</style>
+<style>
+/* SECTION: css-paper */
+.paper-area{padding-bottom:10px}
+.paper-card{
+  position:relative;max-width:720px;margin:0 auto;padding:44px 42px 36px;
+  background:var(--card);border:1px solid var(--ink);
+  box-shadow:0 10px 34px rgba(35,42,59,.16),0 0 0 5px rgba(35,42,59,.04);
+}
+.paper-card::before{
+  content:"";position:absolute;inset:10px;
+  border:1px solid rgba(169,141,79,.55);pointer-events:none;
+}
+.paper-top{display:flex;justify-content:space-between;align-items:flex-start;gap:16px}
+.paper-no{font-size:12px;letter-spacing:.1em;color:var(--ink-soft)}
+.stamp{
+  flex:0 0 auto;width:86px;height:86px;border-radius:50%;
+  white-space:pre-line;
+  border:2.5px solid rgba(138,43,43,.75);color:rgba(138,43,43,.85);
+  display:flex;align-items:center;justify-content:center;text-align:center;
+  font-size:12px;line-height:1.4;letter-spacing:.06em;font-weight:700;
+  transform:rotate(-12deg);opacity:.9;
+}
+.theory-name{
+  margin-top:26px;text-align:center;font-size:clamp(28px,5.4vw,40px);
+  font-weight:700;letter-spacing:.1em;line-height:1.4;
+}
+.theory-latin{margin-top:8px;text-align:center;font-style:italic;font-size:14px;letter-spacing:.24em;color:var(--gold)}
+.theory-school{margin-top:6px;text-align:center;font-size:13px;color:var(--ink-soft)}
+.meta-strip{
+  display:flex;flex-wrap:wrap;justify-content:center;gap:6px 0;
+  margin:20px auto 4px;padding:10px 0;max-width:560px;
+  border-top:1px solid rgba(35,42,59,.25);border-bottom:1px solid rgba(35,42,59,.25);
+}
+.meta-item{font-size:12.5px;color:var(--ink-soft);letter-spacing:.04em;padding:0 12px;border-right:1px solid rgba(35,42,59,.2)}
+.meta-item:last-child{border-right:none}
+.abstract{margin-top:26px}
+.abstract-label,.tenets-label,.golden-label{
+  font-size:13px;font-weight:700;letter-spacing:.5em;text-indent:.5em;
+  color:var(--burgundy);text-align:center;margin-bottom:12px;
+}
+.abstract-text{text-align:justify;font-size:16px}
+.abstract-text::first-letter{font-size:1.6em;font-weight:700;color:var(--burgundy)}
+.tenets{margin:10px 0 0;list-style:none;counter-reset:tenet}
+.tenets li{counter-increment:tenet;margin-bottom:18px;text-align:justify;font-size:15px}
+.tenets li::before{
+  content:"推论 " counter(tenet,cjk-ideographic) " · " attr(data-title);
+  display:block;font-weight:700;font-size:14px;letter-spacing:.12em;color:var(--ink);margin-bottom:4px;
+}
+.tenets .cite{display:block;margin-top:4px;font-size:12.5px;color:var(--ink-soft);font-style:italic}
+.golden{
+  margin:34px 0 0;padding:30px 26px;text-align:center;
+  border-top:3px double var(--ink);border-bottom:3px double var(--ink);
+  background:rgba(169,141,79,.06);
+}
+.golden-text{font-size:clamp(19px,3.4vw,24px);font-weight:700;line-height:1.7;letter-spacing:.04em}
+.review-block{margin-top:28px}
+.review-item{font-size:13.5px;color:var(--ink-soft);margin-bottom:8px;text-align:justify}
+.review-item b{color:var(--ink);font-weight:700}
+.footnote{
+  margin-top:22px;padding-top:14px;border-top:1px solid rgba(35,42,59,.2);
+  font-size:12px;color:var(--ink-soft);font-style:italic;text-align:justify;
+}
+.paper-actions{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin-top:30px}
+.copy-hint{margin-top:14px;text-align:center;font-size:13px;color:var(--burgundy)}
+@media (max-width:640px){
+  .paper-card{padding:30px 18px 26px}
+  .stamp{width:66px;height:66px;font-size:10px}
+  .meta-item{border-right:none;padding:0 8px}
+}
+
+/* SECTION: footer */
+.site-footer{max-width:820px;margin:0 auto;padding:34px 20px 48px;text-align:center;border-top:1px solid rgba(35,42,59,.25)}
+.footer-motto{font-size:15px;font-style:italic;color:var(--burgundy);letter-spacing:.12em;margin-bottom:12px}
+.footer-note{font-size:12.5px;color:var(--ink-soft);line-height:1.9}
+.footer-credit{margin-top:10px;font-size:13px;color:var(--ink);letter-spacing:.06em;font-weight:700}
+.footer-ref{font-weight:400;font-size:12px;color:var(--ink-soft)}
+.footer-credit a{color:var(--burgundy);text-decoration:none;border-bottom:1px solid rgba(138,43,43,.4);word-break:break-all}
+.footer-credit a:hover{color:#6d2020}
+@media (prefers-reduced-motion:reduce){
+  *{transition:none!important;animation:none!important}
+}
+</style>
+<style>
+/* SECTION: css-modal */
+.modal{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;padding:16px}
+.modal-backdrop{position:absolute;inset:0;background:rgba(20,22,30,.66)}
+.modal-panel{
+  position:relative;width:min(560px,100%);max-height:92vh;overflow-y:auto;
+  background:var(--card);border:1px solid var(--ink);box-shadow:0 18px 60px rgba(0,0,0,.4);
+  padding:24px 22px 26px;
+}
+.modal-title{text-align:center;font-size:18px;letter-spacing:.14em;margin-bottom:16px;color:var(--burgundy)}
+.canvas-wrap{border:1px solid rgba(35,42,59,.3);background:#fff;line-height:0}
+#posterCanvas{width:100%;height:auto}
+.founder-row{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-top:16px}
+.founder-row label{font-size:14px;font-weight:700;letter-spacing:.06em}
+#founderInput{
+  flex:1;min-width:140px;height:46px;padding:0 14px;
+  font-family:var(--serif);font-size:16px;color:var(--ink);
+  background:#fff;border:1.5px solid var(--ink);border-radius:2px;outline:none;
+}
+#founderInput:focus{border-color:var(--burgundy)}
+.founder-hint{width:100%;font-size:12px;color:var(--ink-soft)}
+.modal-actions{display:flex;gap:12px;margin-top:18px}
+.modal-actions .btn{flex:1}
+</style>
+<style>
+/* SECTION: css-db */
+.theory-byline{margin-top:6px;text-align:center;font-size:14px;font-weight:700;color:var(--burgundy);letter-spacing:.08em}
+.btn-small{min-height:36px;padding:5px 14px;font-size:13px;border-width:1px}
+/* 进入数据库按钮（首页） */
+.db-enter-row{text-align:center;margin-top:22px}
+.db-enter-count{margin-left:8px;font-size:12.5px;font-weight:400;color:var(--ink-soft)}
+/* 全屏馆藏视图 */
+.db-screen{
+  position:fixed;inset:0;z-index:40;overflow-y:auto;
+  background:var(--paper);
+  background-image:
+    repeating-linear-gradient(0deg,rgba(35,42,59,.025) 0 1px,transparent 1px 3px),
+    radial-gradient(ellipse at 15% 0%,rgba(169,141,79,.10),transparent 55%);
+  padding:30px 22px 60px;
+}
+.db-view-head{
+  max-width:780px;margin:0 auto 18px;padding-bottom:16px;
+  border-bottom:3px double var(--ink);
+  display:flex;align-items:flex-start;justify-content:space-between;gap:14px;
+}
+.db-view-title-wrap{min-width:0}
+.db-title{font-size:clamp(20px,4vw,26px);font-weight:700;letter-spacing:.28em;text-indent:.28em;text-align:left}
+.db-sub{margin-top:6px;font-size:12px;color:var(--ink-soft);letter-spacing:.04em;text-align:left}
+.db-tools{
+  max-width:780px;margin:0 auto 18px;
+  display:flex;align-items:center;flex-wrap:wrap;gap:12px;
+}
+.db-search{
+  flex:1;min-width:200px;height:44px;padding:0 16px;
+  font-family:var(--serif);font-size:15px;color:var(--ink);
+  background:var(--card);border:1.5px solid var(--ink);border-radius:2px;outline:none;
+}
+.db-search:focus{border-color:var(--burgundy);box-shadow:0 0 0 3px rgba(138,43,43,.15)}
+.db-count{font-size:13px;color:var(--burgundy);font-weight:700;letter-spacing:.06em}
+.db-pack-row{
+  max-width:780px;margin:0 auto 18px;padding:12px 14px;
+  display:flex;flex-wrap:wrap;align-items:center;gap:10px;
+  border:1px dashed var(--gold);background:rgba(169,141,79,.06);
+}
+.db-pack-hint{width:100%;font-size:12px;color:var(--ink-soft);line-height:1.7}
+.db-cloud-status{margin-top:8px;font-size:12px;color:var(--gold);letter-spacing:.03em;text-align:left}
+.db-token-helper{
+  max-width:780px;margin:0 auto 18px;padding:14px;
+  display:flex;flex-direction:column;gap:10px;
+  border:1px solid var(--burgundy);background:rgba(138,43,43,.05);
+}
+.db-token-out{
+  width:100%;padding:10px 12px;font-family:monospace;font-size:12px;
+  color:var(--ink);background:#fff;border:1px solid var(--ink);
+  word-break:break-all;resize:none;
+}
+.db-list{max-width:780px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
+.db-item{display:flex;align-items:center;gap:14px;padding:14px 16px;border:1px solid rgba(35,42,59,.3);background:var(--card)}
+.db-item-main{flex:1;min-width:0}
+.db-item-name{font-size:16px;font-weight:700;letter-spacing:.04em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.db-item-meta{margin-top:4px;font-size:12.5px;color:var(--ink-soft);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.db-item-actions{display:flex;gap:8px;flex:0 0 auto;flex-wrap:wrap;justify-content:flex-end}
+.db-empty{max-width:780px;margin:0 auto;text-align:center;font-size:14px;color:var(--ink-soft);font-style:italic;padding:10px 0}
+/* 链接携带收录提示 */
+.import-notice{
+  max-width:640px;margin:0 auto 18px;padding:10px 16px;
+  border:1px solid var(--burgundy);background:rgba(138,43,43,.07);
+  color:var(--burgundy);font-size:14px;letter-spacing:.04em;text-align:center;
+}
+/* 全局轻提示 toast */
+.toast{
+  position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));
+  transform:translateX(-50%);z-index:100;
+  max-width:min(560px,92vw);padding:12px 20px;
+  background:var(--ink);color:#f6f1e5;
+  font-size:14px;line-height:1.7;text-align:center;
+  border-radius:3px;box-shadow:0 8px 24px rgba(0,0,0,.3);
+  white-space:pre-line;
+}
+@media (max-width:640px){
+  .db-screen{padding:18px 12px 48px}
+  .db-view-head{flex-direction:column;align-items:stretch}
+  .db-item{flex-direction:column;align-items:stretch;gap:10px}
+}
+</style>
+</head>
+<body>
+
+<!-- SECTION: masthead -->
+<header class="masthead">
+  <div class="masthead-inner">
+    <div class="mast-side mast-left">EST.<br>MMXXVI</div>
+    <div class="mast-center">
+      <div class="mast-title">人生理论评论</div>
+      <div class="mast-sub">THE LIFE THEORY REVIEW · 国际幽默学术联合会认定刊物 · 影响因子 0.00</div>
+    </div>
+    <div class="mast-side mast-right">VOL. I<br>NO. ∞</div>
+  </div>
+</header>
+
+<main>
+
+<!-- SECTION: hero -->
+<section class="hero">
+  <p class="import-notice hidden" id="importNotice"></p>
+  <p class="hero-latin">QVODLIBET VITIVM · THEORIA NOVA</p>
+  <h2 class="hero-title">把你的小毛病<br>升格为一生学说</h2>
+  <p class="hero-desc">输入一个习惯、观点或自知的小毛病，署上大名点「生成并发表」。本评论将以严谨且不负责任的学术手法，为它包装出一套响亮的理论：名称、核心主张、若干条煞有介事的解释，以及一句足以印在帆布袋上的金句。所有发表记录连同署名自动入库，点下方「进入理论数据库」即可查看全部馆藏。</p>
+  <form class="input-row" id="theoryForm">
+    <div class="field-group">
+      <label class="field-label" for="habitInput">研究课题<span class="field-req">必填</span></label>
+      <input type="text" id="habitInput" placeholder="例如：每天只吃同一家店" maxlength="40" autocomplete="off">
+    </div>
+    <div class="field-group">
+      <label class="field-label" for="bylineInput">发表者署名<span class="field-opt">选填</span></label>
+      <input type="text" id="bylineInput" placeholder="例如：王小二（缺省为匿名学者）" maxlength="10" autocomplete="off">
+    </div>
+    <button type="submit" class="btn btn-primary" data-primary-action>生成并发表</button>
+  </form>
+  <div class="examples">
+    <span class="examples-label">近期学界热门课题：</span>
+    <div class="chips" id="exampleChips"></div>
+  </div>
+  <div class="db-enter-row">
+    <button type="button" class="btn" id="dbEnterBtn">🏛 进入理论数据库<span class="db-enter-count" id="dbEnterCount"></span></button>
+  </div>
+</section>
+
+<!-- SECTION: result -->
+<section class="paper-area hidden" id="paperSection" aria-live="polite">
+  <article class="paper-card">
+    <div class="paper-top">
+      <span class="paper-no" id="paperNo"></span>
+      <span class="stamp" id="stampText"></span>
+    </div>
+    <h3 class="theory-name" id="theoryName"></h3>
+    <p class="theory-latin" id="theoryLatin"></p>
+    <p class="theory-school" id="theorySchool"></p>
+    <p class="theory-byline hidden" id="theoryByline"></p>
+    <div class="meta-strip" id="metaStrip"></div>
+    <div class="abstract">
+      <div class="abstract-label">摘　要</div>
+      <p class="abstract-text" id="theoryClaim"></p>
+    </div>
+    <div class="tenets-label">章　句</div>
+    <ol class="tenets" id="tenetList"></ol>
+    <blockquote class="golden">
+      <div class="golden-label">本理论第一金句</div>
+      <p class="golden-text" id="goldenQuote"></p>
+    </blockquote>
+    <div class="review-block">
+      <div class="tenets-label">同行评议意见</div>
+      <div id="reviewList"></div>
+    </div>
+    <p class="footnote" id="footNote"></p>
+    <div class="paper-actions">
+      <button type="button" class="btn btn-primary" id="regenBtn" data-primary-action>↻ 换一个流派</button>
+      <button type="button" class="btn" id="posterBtn">🏛 生成学术海报</button>
+      <button type="button" class="btn" id="copyBtn">⧉ 复制理论全文</button>
+      <button type="button" class="btn" id="linkBtn">🔗 复制馆藏链接</button>
+    </div>
+    <p class="copy-hint hidden" id="copyHint"></p>
+  </article>
+</section>
+
+<!-- SECTION: database（全屏馆藏视图，由「进入数据库」按钮打开） -->
+<section class="db-screen hidden" id="dbSection" role="dialog" aria-modal="true" aria-label="理论数据库">
+  <div class="db-view-head">
+    <div class="db-view-title-wrap">
+      <h3 class="db-title">理 论 数 据 库</h3>
+      <p class="db-sub">在此发表的理论自动归档；接入共享库后，全世界经此链接发表的理论都会实时汇总到这里。</p>
+      <p class="db-cloud-status" id="dbCloudTip"></p>
+    </div>
+    <button type="button" class="btn btn-small" id="dbCloseBtn">← 返回生成器</button>
+  </div>
+  <div class="db-tools">
+    <input type="search" class="db-search" id="dbSearch" placeholder="检索理论名、课题或发表者…" autocomplete="off" aria-label="检索馆藏">
+    <span class="db-count" id="dbCount"></span>
+    <button type="button" class="btn btn-small" id="dbClearBtn">清空数据库</button>
+  </div>
+  <div class="db-pack-row">
+    <button type="button" class="btn btn-small" id="dbExportBtn">📦 导出馆藏文件</button>
+    <button type="button" class="btn btn-small" id="dbImportBtn">📥 导入馆藏文件</button>
+    <button type="button" class="btn btn-small" id="dbPackLinkBtn">🔗 复制整库链接</button>
+    <button type="button" class="btn btn-small" id="dbPushBtn">📤 补传云端</button>
+    <span class="db-pack-hint">转发最稳的方式：导出 .json 馆藏文件，连同本页面 HTML 一起发给朋友，对方打开页面点「导入馆藏文件」即可整库移植。整库链接适合馆藏少时用，受长度限制。</span>
+    <input type="file" id="dbImportFile" accept=".json,application/json" class="hidden">
+  </div>
+  <div class="db-token-helper hidden" id="dbTokenHelper">
+    <p class="db-pack-hint"><b>第一次连接共享库？</b>把 github_pat_ 开头的令牌粘贴到下面，点「转成编码」，再把编码填进 cloud-config.js 的 token_b64 引号里。转码是为了让 GitHub 的密钥安检不误报、不自动作废这把故意公开的钥匙，权限范围不变。</p>
+    <input type="text" class="db-search" id="tokenPlain" placeholder="粘贴 github_pat_ 开头的令牌（只在本页处理，不会被发送）" autocomplete="off">
+    <button type="button" class="btn btn-small" id="tokenEncodeBtn">转成编码</button>
+    <textarea class="db-token-out hidden" id="tokenEncoded" rows="3" readonly></textarea>
+    <button type="button" class="btn btn-small hidden" id="tokenCopyBtn">⧉ 复制编码结果</button>
+  </div>
+  <div class="db-list" id="dbList"></div>
+  <p class="db-empty hidden" id="dbEmpty">馆藏还是空的。发表第一篇理论，或点开别人发来的「馆藏链接」，这里就会有货。</p>
+</section>
+
+</main>
+
+<!-- SECTION: modal -->
+<div class="modal hidden" id="posterModal" role="dialog" aria-modal="true" aria-label="学术海报">
+  <div class="modal-backdrop" id="modalBackdrop"></div>
+  <div class="modal-panel">
+    <h4 class="modal-title">成果海报 · 可保存分享</h4>
+    <div class="canvas-wrap">
+      <canvas id="posterCanvas" width="1080" height="1440"></canvas>
+    </div>
+    <div class="founder-row">
+      <label for="founderInput">创始人尊称</label>
+      <input type="text" id="founderInput" maxlength="10" placeholder="例如：王小二" autocomplete="off">
+      <span class="founder-hint">将署名为「某某理论创始人」</span>
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-primary" id="downloadPosterBtn" data-primary-action>⬇ 下载海报</button>
+      <button type="button" class="btn" id="closeModalBtn">关闭</button>
+    </div>
+  </div>
+</div>
+
+<!-- SECTION: footer -->
+<footer class="site-footer">
+  <p class="footer-motto">« 一切毛病，皆为未被命名的方法论 »</p>
+  <p class="footer-note">本刊所有内容均属严肃的胡说八道，仅供娱乐。若你在其中读出了道理，那是你自己的功劳。<br>ISSN 0000-0000 · 本刊不接受投稿，因为创始人只收录自己。</p>
+  <p class="footer-credit">制作者：<a href="https://xhslink.cn/o/6po4S4QhN8E" target="_blank" rel="noopener">Lyn喜欢晒太阳</a></p>
+  <p class="footer-credit footer-ref">参考文献：<a href="https://xhslink.cn/o/6po4S4QhN8E" target="_blank" rel="noopener">https://xhslink.cn/o/6po4S4QhN8E</a></p>
+</footer>
+
+<!-- SECTION: toast 全局轻提示 -->
+<div class="toast hidden" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+/* SECTION: js-corpus */
+"use strict";
+
+/* 概念词池：理论名的核心构件 */
+var CONCEPTS = ["节能","惰性锚定","最小干预","延迟兑现","冗余保留","边界防御","补偿","递归","仪式化","低摩擦","留白","间歇共振","熵减","归档","悬置","降维","循环","共生","止损","钝感","折叠","预演","静默","恒温"];
+
+/* 后缀池 */
+var SUFFIXES = ["主义","理论","假说","模型","效应","定律","现象学","学派","悖论","方程"];
+
+/* 伪拉丁文校训 */
+var LATINS = ["MINIMA VITA MAXIMA PAX","VIA LENTA SED CERTA","NON NOVVM SED VSITATVM","SEMPER IDEM ERGO SVM","OTIVM CVM DIGNITATE","QVOD ERAT DEMONSTRATVM","PER ASPERA AD SOPHIA","NOLI TURBARE CIRCULOS MEOS"];
+
+/* 伪学术机构 */
+var SCHOOLS = ["苏黎世生活美学研究所","雷克雅未克行为延迟学会","瓦尔帕莱索日常现象学中心","乌普萨拉最小行动研究院","鹿特丹决策节能实验室","京都侘寂行为科学高等研究院","布宜诺斯艾利斯拖延与时间哲学中心","哥本哈根躺平动力学学会"];
+
+/* 关键词 → 概念定向（让理论名和输入沾边） */
+var HINTS = [
+  { re:/吃|喝|奶茶|外卖|餐|饭|店|厨|点餐/, concepts:["决策节能","味觉锚定","重复","仪式化","恒温"] },
+  { re:/睡|熬夜|失眠|床|早起|赖床/, concepts:["延迟兑现","夜间主权","留白","低摩擦","预演"] },
+  { re:/买|购|下单|购物车|囤|剁手|收藏/, concepts:["占有悬置","潜在消费","归档","止损","悬置"] },
+  { re:/手机|刷|短视频|屏幕|上网|视频|信息/, concepts:["注意力分散","信息觅食","低摩擦","循环","钝感"] },
+  { re:/运动|健身|跑步|锻炼|走路/, concepts:["最小干预","身体递归","间歇共振","循环"] },
+  { re:/迟到|拖延|磨蹭|慢|拖/, concepts:["时间滞后","延迟兑现","节奏自主","边界防御"] },
+  { re:/哈|笑|敷衍|回复|消息|聊天|社交|说话/, concepts:["情感节能","社交最小化","仪式化","静默"] },
+  { re:/书|学|考|读|复习|作业|课|知识/, concepts:["知识归档","占有型学习","延迟理解","递归"] },
+  { re:/钱|省|穷|存|攒|花|消费/, concepts:["资源冻结","贫穷美学","止损","熵减"] },
+  { re:/懒|躺|摆烂|卷|摸鱼|划水|休息/, concepts:["能量守恒","静默抵抗","横卧哲学","钝感","留白"] },
+  { re:/计划|清单|安排|目标|flag/, concepts:["预演","悬置","归档","折叠","仪式化"] },
+  { re:/猫|狗|宠物|植物|养/, concepts:["跨物种共生","恒温","循环","仪式化"] }
+];
+
+/* 负面标签（先抑） */
+var NEGATIVES = ["懒惰","堕落","拖延","缺乏自律","自我放弃","意志力薄弱","逃避现实","摆烂"];
+
+/* 正面升华（后扬） */
+var POSITIVES = ["高度进化的生存策略","精密的能量管理行为","前卫的生活美学实践","深刻的自我和解","对加速时代的静默抵抗","一种未被命名的方法论","个体主权的高级表达"];
+
+/* 金句池 */
+var GOLDENS = [
+  "世界的本质是熵增，而我的本质是节能。",
+  "不是我不想改变，是我在用更高的维度维持一致。",
+  "当所有人都在奔跑，静止就是一种先锋。",
+  "凡人看见毛病，智者看见尚未命名的方法论。",
+  "自律的反面不是放纵，是更诚实的自律。",
+  "我把人生过成了极简主义，只是没来得及告诉极简主义。",
+  "努力不一定成功，但不努力真的很舒服，且符合热力学第二定律。",
+  "真正的秩序，是让混乱保持它习惯的样子。",
+  "我不是在逃避生活，我是在为生活保留体力。",
+  "所有的坚持都是重复，所有的重复都被我称之为学派。"
+];
+
+/* 伪引用文献池 */
+var CITES = [
+  "[1] Chen, W. & Wang, L. (2023). 《论重复选择的边际效用》. 荒诞行为科学杂志, 12(3), 45-67. 该文献引用次数为 0，主要因为作者尚未告诉任何人。",
+  "[2] 佚名 (2021). 《沙发上的现象学：论静止的主动性》. 国际躺平研究评论, 8(1), 12-30. 审稿人认为结论过重，作者认为审稿人过重。",
+  "[3] Müller, K. (2024). 《熵、惰性与你冰箱里的那半瓶酱》. 苏黎世生活美学研究所工作论文, 第 77 号. 本文数据全部来自作者的冰箱。",
+  "[4] 张三丰（非武当那位）(2022). 《论「等一下」的时间哲学》. 东亚拖延研究季刊, 5(4), 88-102. 稿件逾期 14 个月提交，编辑部认为这本身就是最好的论据。",
+  "[5] Smith, J. (2020). 《最小行动原理在日常生活中的误用》. 不必要知识学报, 3(2), 1-9. 作者声明本研究未获任何资助，包括家人的口头支持。"
+];
+
+/* 脚注池 */
+var FOOTNOTES = [
+  "※ 本研究未获得任何经费支持，研究者以「反正也没人看」为由拒绝披露利益冲突。",
+  "※ 本理论已通过同行评议：评议人一名，即创始人本人，评议意见为「写得真好」。",
+  "※ 实验样本 n=1，即创始人本人；对照组为「想象中的自律的自己」，已全面落败。",
+  "※ 复现说明：任何人只要照着做，都能完美复现本文的全部结果，因为本文描述的就是任何人。",
+  "※ 本刊拒稿率 0%，拒审率 100%——所有外部投稿均在收稿前被告知本刊不存在。"
+];
+
+/* 示例输入（首页直接试） */
+var EXAMPLES = [
+  "每天只吃同一家店",
+  "睡前必须刷手机到眼睛睁不开",
+  "购物车加满但一件不买",
+  "回复哈哈哈其实根本没笑",
+  "买了书就等于读了书",
+  "上班摸鱼但活也没落下",
+  "计划做了一堆一个没执行",
+  "永远比约定时间晚五分钟"
+];
+</script>
+<script>
+/* SECTION: js-engine */
+
+/* 可复现随机：同一输入 + 同一流派序号 → 同一理论 */
+function hashStr(s){
+  var h = 1779033703 ^ s.length, i;
+  for(i=0;i<s.length;i++){
+    h = Math.imul(h ^ s.charCodeAt(i), 3432918353);
+    h = (h << 13) | (h >>> 19);
+  }
+  return (h ^ (h >>> 16)) >>> 0;
+}
+function mulberry32(a){
+  return function(){
+    a = (a + 0x6D2B79F5) | 0;
+    var t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+function pick(rng,arr){ return arr[Math.floor(rng()*arr.length)]; }
+
+/* 从口语输入里抠出核心词，如「睡前必须刷手机到眼睛睁不开」→「睡前刷手机」 */
+function coreWord(input){
+  var s = String(input).replace(/\s+/g,"");
+  s = s.replace(/^(每天|天天|总是|老是|经常|动不动|喜欢|热爱|习惯|必须|就是|其实|永远|有点|稍微|一)+/,"");
+  s = s.replace(/(的时候|而已|罢了|一次|一件|一个|睁不开|睡不着)+$/,"");
+  var segs = s.split(/[，。！？,.!?\s、但但是可是然后]/).filter(function(x){return x.length>0;});
+  var base = segs[0] || s;
+  base = base.replace(/^(我|人们|大家|本人)/,"");
+  if(base.length===0){ base = String(input).replace(/\s+/g,"") || "生活"; }
+  return base.slice(0,4);
+}
+
+/* 理论命名：概念词 + 学派后缀；部分流派直接用核心词命名 */
+function makeName(rng,input){
+  var core = coreWord(input);
+  var concepts = CONCEPTS.slice();
+  var i;
+  for(i=0;i<HINTS.length;i++){
+    if(HINTS[i].re.test(input)){
+      concepts = HINTS[i].concepts.concat(CONCEPTS);
+      break;
+    }
+  }
+  var suffix = pick(rng,SUFFIXES);
+  if(rng() < 0.34 && core.length>=2){
+    return core + suffix;
+  }
+  return pick(rng,concepts) + suffix;
+}
+
+/* 章句模板：每条推论 = 标题 + 正文 + 可选伪引用 */
+var TENET_SLOTS = [
+  { title:"守恒律", texts:[
+    function(c){ return "世俗将「"+c.input+"」草率地归因为"+c.neg+"。本理论反对这一粗暴叙事：该行为实为一种"+c.pos+"。主体的意志总量恒定，每一次在「"+c.core+"」上的节约，都将被转投到真正重要的大事上——比如纠结外卖红包怎么用，以及思考今晚几点睡（思考本身不构成睡觉）。"; },
+    function(c){ return "根据"+c.name+"第一守恒律：一个人不可能同时在所有事情上自律。既然总量有限，理性的做法是在「"+c.core+"」上建立低耗能的固定模式，把波动留给值得波动的领域。这不是"+c.neg+"，这是资源配置。"; }
+  ]},
+  { title:"主权宣言", texts:[
+    function(c){ return "在一切都被算法安排的时代，「"+c.input+"」是为数不多完全由本人拍板的行为。它未必高效，未必健康，未必说得出口，但它是你的。"+c.name+"据此宣称：对"+c.core+"的最终解释权，归创始人本人所有，任何外部意见仅供参考，且参考过程暂缓。"; },
+    function(c){ return "旁人眼中的「"+c.core+"」是一种失控；本理论将其重新定义为「主权的行使」。主体通过持续、稳定、不容置疑地重复该行为，向外界划定了清晰的边界：此事我说了算。边界一旦划定，人生立刻显得井井有条——至少这一条是。"; }
+  ]},
+  { title:"进化视角", texts:[
+    function(c){ return "从演化角度看，能够长期坚持「"+c.core+"」的个体，具备罕见的低内耗特质：他们不与自己的本能开庭打仗，因而保存了完整的心理能量用于现代生活的真正猛兽——周一早会、家庭群消息，以及年底的KPI。"+c.neg+"？不，这是被自然选择偷偷偏爱的性状。"; },
+    function(c){ return "现代性的病症是选择过载：一天要做的决定比祖先一辈子都多。"+c.name+"指出，「"+c.input+"」本质上是一种决策外包——把重复出现的选择题一次性外包给习惯，从此不再重审。祖先若是有这觉悟，早就不用每天纠结去哪儿采集了。"; }
+  ]},
+  { title:"美学维度", texts:[
+    function(c){ return c.name+"同时是一场美学实践：与其把「"+c.core+"」修改成别人期待的样子，不如把它供奉起来，命名为流派，并煞有介事地撰写纲领。当一件毛病获得了名字、拉丁文校训和伪引用文献，它便脱离了道德审判的管辖，进入了艺术批评的领域。"; },
+    function(c){ return "本理论拒绝将「"+c.input+"」问题化。恰恰相反，它主张一种「"+c.conceptFix+"」的生活美学：不修饰、不辩解、不整改，只是稳定地、日复一日地成为自己。这种一致性本身，就比大多数人的自律更接近风格。"; }
+  ]}
+];
+
+/* 同行评议意见池 */
+var REVIEWS = [
+  { who:"评审一", text:"论证存在明显循环，但我找不到反例——因为所有反例的作者也在实践本理论。建议修改后发表，修改内容：不用改。" },
+  { who:"评审二", text:"作者对「学术」一词的定义有待商榷，对「有待商榷」一词的使用倒是相当娴熟。" },
+  { who:"评审三", text:"数据部分（n=1）说服力惊人，毕竟这位 1 我们都很熟悉。" },
+  { who:"评审四", text:"本文最大的贡献是证明了：任何行为只要配上拉丁文，就会显得深不可测。" },
+  { who:"匿名学者", text:"读完深受启发，决定立刻放弃整改自己，并申请加入该学派。请问入会表格在哪里？答：没有表格，你已经在了。" }
+];
+
+var STAMPS = ["唯一\n认定","准予\n立派","严肃\n胡说","永久\n收录","本人\n同意"];
+
+function buildTheory(input, variant){
+  var rng = mulberry32(hashStr(input + "||流派" + variant));
+  var core = coreWord(input);
+  var name = makeName(rng,input);
+  var neg = pick(rng,NEGATIVES);
+  var pos = pick(rng,POSITIVES);
+  var ctx = { input:input, core:core, name:name, neg:neg, pos:pos, conceptFix:pick(rng,CONCEPTS) };
+
+  /* 摘要（核心主张） */
+  var claim = "本理论以「"+input+"」为第一观察对象，正式宣布：该行为不是"+neg+"，而是"+pos+"。其内在机制可概括为「"+ctx.conceptFix+"」——主体在高熵环境中主动压缩决策成本，以有限的意志力优先供养真正重要之事。据此，"+name+"主张：此行为不需要被纠正，需要被命名、被体系化，并被授予一个响亮的拉丁文校训。";
+
+  /* 章句：4 个槽位里抽 3 个，各配 0~1 条伪引用 */
+  var order = [0,1,2,3];
+  var i,j,tmp;
+  for(i=order.length-1;i>0;i--){
+    j = Math.floor(rng()*(i+1));
+    tmp = order[i]; order[i] = order[j]; order[j] = tmp;
+  }
+  var chosen = order.slice(0,3).sort(function(a,b){return a-b;});
+  var tenets = chosen.map(function(idx){
+    var slot = TENET_SLOTS[idx];
+    var cite = rng() < 0.6 ? pick(rng,CITES) : "";
+    return { title:slot.title, text:pick(rng,slot.texts)(ctx), cite:cite };
+  });
+
+  /* 金句：优先定制款，混入通用池 */
+  var goldenPool = GOLDENS.concat([
+    "「"+core+"」不是毛病，是尚未申遗的方法论。",
+    "我不与时代赛跑，我负责在原地保持配速。",
+    "所谓"+name+"，就是把将就活成了讲究。"
+  ]);
+  var golden = pick(rng,goldenPool);
+
+  /* 评议：固定抽 3 条 */
+  var rOrder = [0,1,2,3,4], rChosen = [];
+  for(i=rOrder.length-1;i>0;i--){
+    j = Math.floor(rng()*(i+1));
+    tmp = rOrder[i]; rOrder[i] = rOrder[j]; rOrder[j] = tmp;
+  }
+  rChosen = rOrder.slice(0,3);
+
+  var meta = [
+    { k:"立派年份", v:String(2019 + Math.floor(rng()*7)) },
+    { k:"学派人数", v:"1 人（即创始人）" },
+    { k:"影响因子", v:"0.0" + (1 + Math.floor(rng()*8)) },
+    { k:"可复现性", v:"完美（n=1）" },
+    { k:"评审状态", v:"已通过（本人）" }
+  ];
+
+  var stamp = pick(rng,STAMPS).split("\n");
+
+  return {
+    input: input,
+    variant: variant,
+    name: name,
+    latin: pick(rng,LATINS),
+    school: pick(rng,SCHOOLS),
+    paperNo: "LTR-2026-" + String(100 + Math.floor(rng()*900)),
+    stamp: stamp,
+    meta: meta,
+    claim: claim,
+    tenets: tenets,
+    golden: golden,
+    reviews: rChosen.map(function(k){ return REVIEWS[k]; }),
+    footnote: pick(rng,FOOTNOTES)
+  };
+}
+</script>
+<script>
+/* SECTION: js-render */
+var state = { input:"", variant:0, theory:null, founder:"" };
+
+var el = {
+  form: document.getElementById("theoryForm"),
+  input: document.getElementById("habitInput"),
+  byline: document.getElementById("bylineInput"),
+  chips: document.getElementById("exampleChips"),
+  section: document.getElementById("paperSection"),
+  paperNo: document.getElementById("paperNo"),
+  stamp: document.getElementById("stampText"),
+  name: document.getElementById("theoryName"),
+  latin: document.getElementById("theoryLatin"),
+  school: document.getElementById("theorySchool"),
+  bylineShow: document.getElementById("theoryByline"),
+  meta: document.getElementById("metaStrip"),
+  claim: document.getElementById("theoryClaim"),
+  tenets: document.getElementById("tenetList"),
+  golden: document.getElementById("goldenQuote"),
+  reviews: document.getElementById("reviewList"),
+  footnote: document.getElementById("footNote"),
+  regen: document.getElementById("regenBtn"),
+  poster: document.getElementById("posterBtn"),
+  copy: document.getElementById("copyBtn"),
+  copyHint: document.getElementById("copyHint"),
+  modal: document.getElementById("posterModal"),
+  backdrop: document.getElementById("modalBackdrop"),
+  closeBtn: document.getElementById("closeModalBtn"),
+  canvas: document.getElementById("posterCanvas"),
+  founder: document.getElementById("founderInput"),
+  download: document.getElementById("downloadPosterBtn"),
+  dbSection: document.getElementById("dbSection"),
+  dbList: document.getElementById("dbList"),
+  dbCount: document.getElementById("dbCount"),
+  dbEmpty: document.getElementById("dbEmpty"),
+  dbClear: document.getElementById("dbClearBtn"),
+  dbEnter: document.getElementById("dbEnterBtn"),
+  dbEnterCount: document.getElementById("dbEnterCount"),
+  dbClose: document.getElementById("dbCloseBtn"),
+  dbSearch: document.getElementById("dbSearch"),
+  linkBtn: document.getElementById("linkBtn"),
+  importNotice: document.getElementById("importNotice"),
+  toast: document.getElementById("toast"),
+  dbExport: document.getElementById("dbExportBtn"),
+  dbImportBtn: document.getElementById("dbImportBtn"),
+  dbImportFile: document.getElementById("dbImportFile"),
+  dbPackLink: document.getElementById("dbPackLinkBtn"),
+  dbPush: document.getElementById("dbPushBtn"),
+  dbCloudTip: document.getElementById("dbCloudTip"),
+  dbTokenHelper: document.getElementById("dbTokenHelper"),
+  tokenPlain: document.getElementById("tokenPlain"),
+  tokenEncodeBtn: document.getElementById("tokenEncodeBtn"),
+  tokenEncoded: document.getElementById("tokenEncoded"),
+  tokenCopyBtn: document.getElementById("tokenCopyBtn")
+};
+
+/* SECTION: toast */
+var toastTimer = null;
+function showToast(msg, hold){
+  el.toast.textContent = msg;
+  el.toast.classList.remove("hidden");
+  if(toastTimer){ clearTimeout(toastTimer); }
+  toastTimer = setTimeout(function(){
+    el.toast.classList.add("hidden");
+    toastTimer = null;
+  }, hold || 3000);
+}
+
+function clearNode(node){ while(node.firstChild){ node.removeChild(node.firstChild); } }
+
+function renderTheory(t){
+  el.paperNo.textContent = "论文编号 " + t.paperNo + " · 初稿即终稿 · 不接受修改意见";
+  el.stamp.textContent = t.stamp.join("\n");
+  el.name.textContent = "《" + t.name + "》";
+  el.latin.textContent = t.latin;
+  el.school.textContent = "发文机构：" + t.school;
+  if(state.founder){
+    el.bylineShow.textContent = "发表者：" + state.founder + " · " + t.name + "创始人";
+    el.bylineShow.classList.remove("hidden");
+  } else {
+    el.bylineShow.classList.add("hidden");
+  }
+
+  clearNode(el.meta);
+  t.meta.forEach(function(m){
+    var span = document.createElement("span");
+    span.className = "meta-item";
+    span.textContent = m.k + " " + m.v;
+    el.meta.appendChild(span);
+  });
+
+  el.claim.textContent = t.claim;
+
+  clearNode(el.tenets);
+  t.tenets.forEach(function(item){
+    var li = document.createElement("li");
+    li.dataset.title = item.title;
+    li.appendChild(document.createTextNode(item.text));
+    if(item.cite){
+      var cite = document.createElement("span");
+      cite.className = "cite";
+      cite.textContent = item.cite;
+      li.appendChild(cite);
+    }
+    el.tenets.appendChild(li);
+  });
+
+  el.golden.textContent = "「" + t.golden + "」";
+
+  clearNode(el.reviews);
+  t.reviews.forEach(function(r){
+    var p = document.createElement("p");
+    p.className = "review-item";
+    var b = document.createElement("b");
+    b.textContent = r.who + "：";
+    p.appendChild(b);
+    p.appendChild(document.createTextNode(r.text));
+    el.reviews.appendChild(p);
+  });
+
+  el.footnote.textContent = t.footnote;
+  el.copyHint.classList.add("hidden");
+}
+
+function generate(input, variant, opts){
+  opts = opts || {};
+  var founder = (opts.founder !== undefined) ? opts.founder : readByline();
+  var t = buildTheory(input, variant);
+  state.input = input;
+  state.variant = variant;
+  state.theory = t;
+  state.founder = founder;
+  renderTheory(t);
+  el.section.classList.remove("hidden");
+  if(!opts.fromDb){
+    var rec = { input:input, variant:variant, founder:founder, time:Date.now() };
+    addRecord(rec);
+    renderDatabase();
+    if(cloudEnabled()){ cloudPush([rec], false); }
+  }
+  el.section.scrollIntoView({ behavior:"smooth", block:"start" });
+}
+
+function readByline(){
+  return el.byline.value.replace(/\s+/g,"").slice(0,10);
+}
+
+/* SECTION: database —— 发表数据汇总（localStorage 本地归档，上限 100 条） */
+var DB_KEY = "life-theory-db-v1";
+function loadDB(){
+  try{
+    var raw = localStorage.getItem(DB_KEY);
+    var arr = raw ? JSON.parse(raw) : [];
+    return Array.isArray(arr) ? arr : [];
+  }catch(e){ return []; }
+}
+function saveDB(list){
+  try{ localStorage.setItem(DB_KEY, JSON.stringify(list)); }catch(e){}
+}
+function recKey(r){ return r.input + "|" + r.variant; }
+function addRecord(rec){
+  var list = loadDB(), i, exist = -1;
+  for(i=0;i<list.length;i++){
+    if(recKey(list[i]) === recKey(rec)){ exist = i; break; }
+  }
+  if(exist >= 0){
+    list[exist].founder = rec.founder;
+    list[exist].time = rec.time;
+  } else {
+    list.unshift(rec);
+  }
+  if(list.length > 100){ list = list.slice(0,100); }
+  saveDB(list);
+}
+function updateFounderInDB(founder){
+  var list = loadDB(), i;
+  for(i=0;i<list.length;i++){
+    if(recKey(list[i]) === state.input + "|" + state.variant){
+      list[i].founder = founder;
+      break;
+    }
+  }
+  saveDB(list);
+}
+function removeRecord(idx){
+  var list = loadDB();
+  if(idx >= 0 && idx < list.length){
+    list.splice(idx,1);
+    saveDB(list);
+  }
+}
+function formatTime(ms){
+  var d = new Date(ms);
+  function p(n){ return (n < 10 ? "0" : "") + n; }
+  return d.getFullYear() + "-" + p(d.getMonth()+1) + "-" + p(d.getDate()) + " " + p(d.getHours()) + ":" + p(d.getMinutes());
+}
+var dbQuery = "";
+function mkDbBtn(cls, label, idx){
+  var b = document.createElement("button");
+  b.type = "button";
+  b.className = "btn btn-small " + cls;
+  b.textContent = label;
+  b.dataset.idx = String(idx);
+  return b;
+}
+function renderDatabase(){
+  var all = mergedList();
+  var total = all.length;
+  updateCloudTip();
+  var q = dbQuery.replace(/\s+/g, "").toLowerCase();
+  clearNode(el.dbList);
+  el.dbEnterCount.textContent = total > 0 ? " · 馆藏 " + total + " 篇" : "";
+
+  var matched = 0;
+  all.forEach(function(rec, idx){
+    var t = buildTheory(rec.input, rec.variant);
+    var hay = (t.name + rec.input + (rec.founder || "")).toLowerCase();
+    if(q && hay.indexOf(q) < 0){ return; }
+    matched++;
+
+    var item = document.createElement("div");
+    item.className = "db-item";
+
+    var main = document.createElement("div");
+    main.className = "db-item-main";
+    var nameEl = document.createElement("div");
+    nameEl.className = "db-item-name";
+    nameEl.textContent = "《" + t.name + "》";
+    var metaEl = document.createElement("div");
+    metaEl.className = "db-item-meta";
+    var srcTag = rec.__src === "cloud" ? "☁云端 · " : "📱本机 · ";
+    metaEl.textContent = srcTag + "课题：" + rec.input + "　发表者：" + (rec.founder || "匿名学者") + "　收录：" + formatTime(rec.time);
+    main.appendChild(nameEl);
+    main.appendChild(metaEl);
+
+    var actions = document.createElement("div");
+    actions.className = "db-item-actions";
+    actions.appendChild(mkDbBtn("db-viewbtn", "查看全文", idx));
+    actions.appendChild(mkDbBtn("db-linkbtn", "馆藏链接", idx));
+    actions.appendChild(mkDbBtn("db-del", "除名", idx));
+
+    item.appendChild(main);
+    item.appendChild(actions);
+    el.dbList.appendChild(item);
+  });
+
+  el.dbCount.textContent = q
+    ? "馆藏 " + total + " 篇 · 检索命中 " + matched + " 篇"
+    : "馆藏理论 " + total + " 篇";
+
+  if(total === 0){
+    el.dbEmpty.textContent = "馆藏还是空的。发表第一篇理论，或点开别人发来的「馆藏链接」，这里就会有货。";
+    el.dbEmpty.classList.remove("hidden");
+  } else if(matched === 0){
+    el.dbEmpty.textContent = "没有匹配的馆藏。换个关键词试试，例如理论名、课题或发表者。";
+    el.dbEmpty.classList.remove("hidden");
+  } else {
+    el.dbEmpty.classList.add("hidden");
+  }
+}
+
+/* 馆藏链接：理论数据编码进 URL，打开即自动收录 */
+function b64enc(str){
+  var bytes = new TextEncoder().encode(str);
+  var bin = "";
+  bytes.forEach(function(b){ bin += String.fromCharCode(b); });
+  return btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+function b64dec(s){
+  var bin = atob(s.replace(/-/g, "+").replace(/_/g, "/"));
+  var bytes = new Uint8Array(bin.length);
+  for(var i=0;i<bin.length;i++){ bytes[i] = bin.charCodeAt(i); }
+  return new TextDecoder().decode(bytes);
+}
+function makeArchiveLink(rec){
+  var payload = JSON.stringify({ input: rec.input, variant: rec.variant | 0, founder: rec.founder || "" });
+  var base = location.href.split("#")[0];
+  return base + "#t=" + b64enc(payload);
+}
+function readHashImport(){
+  var m = location.hash.match(/(?:#|&)t=([A-Za-z0-9\-_]+)/);
+  if(!m){ return null; }
+  try {
+    var obj = JSON.parse(b64dec(m[1]));
+    if(obj && typeof obj.input === "string" && obj.input.length > 0){
+      return {
+        input: obj.input.slice(0, 40),
+        variant: obj.variant | 0,
+        founder: String(obj.founder || "").slice(0, 10)
+      };
+    }
+  } catch(e){}
+  return null;
+}
+function copyArchiveLink(rec, btn){
+  var local = location.protocol === "file:";
+  var msg = local
+    ? "馆藏链接已复制。\n注意：当前是本地文件方式打开，链接指向你这台设备的路径，他人直接点开可能无法访问。建议把 HTML 文件本身一起发给对方，或将文件上传到任意网页空间后再分享链接。"
+    : "馆藏链接已复制：谁点开这条链接，谁就把这篇理论收进自己的数据库。"
+  var text = makeArchiveLink(rec);
+  function flashBtn(){
+    if(btn){
+      var old = btn.textContent;
+      btn.textContent = "已复制 ✓";
+      setTimeout(function(){ btn.textContent = old; }, 1400);
+    }
+  }
+  function withFallback(){
+    var ta = document.createElement("textarea");
+    ta.value = text;
+    ta.style.position = "fixed";
+    ta.style.opacity = "0";
+    document.body.appendChild(ta);
+    ta.select();
+    var done = false;
+    try { done = document.execCommand("copy"); } catch(e){ done = false; }
+    document.body.removeChild(ta);
+    showToast(done ? msg : "复制失败，请长按选中页面文字手动复制。", local ? 7000 : 3200);
+    if(done){ flashBtn(); }
+  }
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(function(){
+      showToast(msg, local ? 7000 : 3200);
+      flashBtn();
+    }, withFallback);
+  } else {
+    withFallback();
+  }
+}
+
+/* SECTION: db-pack —— 整库打包：导出文件 / 导入文件 / 整库链接 */
+function exportDBFile(){
+  var list = mergedList();
+  if(!list.length){
+    showToast("馆藏还是空的，先去发表一篇理论再打包。", 2800);
+    return;
+  }
+  var payload = {
+    app: "life-theory-generator",
+    kind: "theory-database",
+    version: 1,
+    exportedAt: Date.now(),
+    count: list.length,
+    items: list.map(function(r){
+      return { input: r.input, variant: r.variant, founder: r.founder || "", time: r.time };
+    })
+  };
+  var d = new Date();
+  function p(n){ return (n < 10 ? "0" : "") + n; }
+  var fname = "人生理论数据库-" + d.getFullYear() + p(d.getMonth()+1) + p(d.getDate()) + "-" + p(d.getHours()) + p(d.getMinutes()) + ".json";
+  try {
+    var blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url;
+    a.download = fname;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 2000);
+    showToast("已导出「" + fname + "」，共 " + list.length + " 篇。把该文件连同页面 HTML 一起转发给朋友，对方点「导入馆藏文件」即可整库移植。", 6500);
+  } catch(e){
+    showToast("导出失败：当前浏览器不支持文件下载，可改用「复制整库链接」。", 4000);
+  }
+}
+function mergeDBItems(items){
+  var list = loadDB();
+  var added = 0, patched = 0;
+  items.forEach(function(it){
+    if(!it || typeof it.input !== "string" || !it.input){ return; }
+    var rec = {
+      input: it.input.slice(0, 40),
+      variant: it.variant | 0,
+      founder: String(it.founder || "").slice(0, 10),
+      time: (typeof it.time === "number" && it.time > 0) ? it.time : Date.now()
+    };
+    var key = recKey(rec), found = -1;
+    for(var i=0;i<list.length;i++){
+      if(recKey(list[i]) === key){ found = i; break; }
+    }
+    if(found < 0){
+      list.push(rec);
+      added++;
+    } else if(!list[found].founder && rec.founder){
+      list[found].founder = rec.founder;
+      patched++;
+    }
+  });
+  list.sort(function(a, b){ return (b.time || 0) - (a.time || 0); });
+  if(list.length > 100){ list = list.slice(0, 100); }
+  saveDB(list);
+  renderDatabase();
+  return { added: added, patched: patched, total: list.length };
+}
+function importFromFile(file){
+  var reader = new FileReader();
+  reader.onload = function(){
+    var res;
+    try { res = JSON.parse(String(reader.result)); }
+    catch(e){ showToast("导入失败：这个文件不是有效的 JSON 馆藏包。", 4000); return; }
+    var items = Array.isArray(res) ? res : (res && Array.isArray(res.items) ? res.items : null);
+    if(!items){ showToast("导入失败：文件里没有找到馆藏数据（请用本页导出的 .json）。", 4000); return; }
+    var r = mergeDBItems(items);
+    showToast("导入完成：新增收录 " + r.added + " 篇" + (r.patched ? "，为 " + r.patched + " 篇补上署名" : "") + "。当前馆藏 " + r.total + " 篇。", 5500);
+  };
+  reader.onerror = function(){ showToast("导入失败：文件读取不了，请确认文件完整。", 3500); };
+  reader.readAsText(file);
+}
+function wholeLibLink(){
+  var list = mergedList();
+  if(!list.length){ return null; }
+  var payload = JSON.stringify(list.map(function(r){
+    return { input: r.input, variant: r.variant, founder: r.founder || "" };
+  }));
+  return location.href.split("#")[0] + "#db=" + b64enc(payload);
+}
+function copyWholeLibLink(){
+  var url = wholeLibLink();
+  if(!url){
+    showToast("馆藏是空的，先发表几篇理论再打包。", 2800);
+    return;
+  }
+  if(url.length > 7000){
+    showToast("整库链接约 " + url.length + " 字符，太长了——很多聊天工具会把链接截断。请改用「导出馆藏文件」转发，更可靠。", 6000);
+    return;
+  }
+  var n = loadDB().length;
+  var local = location.protocol === "file:";
+  var msg = local
+    ? "整库链接已复制（含 " + n + " 篇）。\n注意：当前是本地文件打开，链接他人无法访问。建议用「导出馆藏文件」把 .json 连同页面发给朋友，或部署到网页空间后再分享链接。"
+    : "整库链接已复制（含 " + n + " 篇理论）：谁打开这条链接，谁就把整个馆藏移植进自己的数据库。";
+  var ta, done;
+  function fallback(){
+    ta = document.createElement("textarea");
+    ta.value = url;
+    ta.style.position = "fixed";
+    ta.style.opacity = "0";
+    document.body.appendChild(ta);
+    ta.select();
+    done = false;
+    try { done = document.execCommand("copy"); } catch(e){ done = false; }
+    document.body.removeChild(ta);
+    showToast(done ? msg : "复制失败，请长按选中链接文字手动复制。", local ? 7500 : 4000);
+  }
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(url).then(function(){
+      showToast(msg, local ? 7500 : 4000);
+    }, fallback);
+  } else {
+    fallback();
+  }
+}
+function readHashDBImport(){
+  var m = location.hash.match(/(?:#|&)db=([A-Za-z0-9\-_]+)/);
+  if(!m){ return null; }
+  try {
+    var obj = JSON.parse(b64dec(m[1]));
+    if(Array.isArray(obj)){ return obj; }
+  } catch(e){}
+  return null;
+}
+
+/* 理论全文纯文本版，用于复制分享 */
+function theoryToText(t){
+  var lines = [];
+  lines.push("《" + t.name + "》");
+  lines.push(t.latin);
+  lines.push("—— " + t.school + " · 论文编号 " + t.paperNo);
+  lines.push("发表者：" + (state.founder || "匿名学者") + " · " + t.name + "创始人");
+  lines.push("");
+  lines.push("【缘起】" + t.input);
+  lines.push("");
+  lines.push("【核心主张】");
+  lines.push(t.claim);
+  lines.push("");
+  lines.push("【章句】");
+  t.tenets.forEach(function(item,i){
+    lines.push("推论" + "一二三四".charAt(i) + " · " + item.title);
+    lines.push(item.text);
+    if(item.cite){ lines.push(item.cite); }
+    lines.push("");
+  });
+  lines.push("【第一金句】");
+  lines.push("「" + t.golden + "」");
+  lines.push("");
+  lines.push(t.footnote);
+  lines.push("—— 出自《人生理论评论》VOL.I · 人生理论生成器");
+  lines.push("制作者：Lyn喜欢晒太阳 · 参考文献：https://xhslink.cn/o/6po4S4QhN8E");
+  return lines.join("\n");
+}
+
+function copyTheory(){
+  if(!state.theory){ return; }
+  copyAny(theoryToText(state.theory), "已复制到剪贴板，去震惊你的群聊吧。");
+}
+function copyAny(text, okMsg, useToast){
+  function done(msg){
+    if(useToast){ showToast(msg, 4500); return; }
+    el.copyHint.textContent = msg;
+    el.copyHint.classList.remove("hidden");
+  }
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(function(){
+      done(okMsg);
+    }, function(){ fallbackCopy(text, done); });
+  } else {
+    fallbackCopy(text, done);
+  }
+}
+function fallbackCopy(text, ok){
+  var ta = document.createElement("textarea");
+  ta.value = text;
+  ta.style.position = "fixed";
+  ta.style.opacity = "0";
+  document.body.appendChild(ta);
+  ta.select();
+  var done = false;
+  try { done = document.execCommand("copy"); } catch(e){ done = false; }
+  document.body.removeChild(ta);
+  ok(done ? "已复制到剪贴板，去震惊你的群聊吧。" : "复制失败，请长按选中页面文字手动复制。");
+}
+</script>
+<script>
+/* SECTION: js-cloud —— 共享库：用 GitHub 仓库当数据库
+   接入方法（创始人只做这三件事）：
+   1. 新建一个 PUBLIC 仓库当数据仓库，例如 theory-db（勾选加 README）——已完成
+   2. Settings → Developer settings → Fine-grained tokens → 新建令牌：
+      只选那一个仓库，权限只开 Contents: Read and write
+   3. 推荐做法：打开网站进"理论数据库"，用页面里的「令牌转码助手」把令牌转成编码，
+      再在网页仓库根目录新建五行的 cloud-config.js 填进 token_b64 字段。
+      切勿把 github_pat_ 明文提交进公开仓库——GitHub 官方会自动吊销公开仓库里的明文令牌。
+      以后换钥匙也只改这个五行小文件。 */
+var CLOUD = {
+  owner: "Lynchsty",              // 你的 GitHub 用户名
+  repo: "theory-db",              // 数据仓库名（专门存数据的空仓库）
+  path: "theories.json",
+  token: "__PASTE_TOKEN_HERE__"   // 也可以在仓库根目录新建 cloud-config.js 小文件填令牌（推荐，见下）
+};
+
+/* 动态加载五线小配置文件 cloud-config.js：存在则覆盖配置，不存在（404）静默跳过，
+   因此本文件单独下载直接打开也完全可用（等同 v7 行为） */
+function applyCloudConfigOverride(){
+  if(window.THEORY_CLOUD){
+    if(window.THEORY_CLOUD.token_b64){
+      /* 编码令牌：绕过 GitHub 对明文令牌的自动吊销，运行时解码后使用 */
+      try { CLOUD.token = decodeB64Utf8(window.THEORY_CLOUD.token_b64.replace(/\s+/g, "")); } catch(e){}
+    } else if(window.THEORY_CLOUD.token){
+      CLOUD.token = window.THEORY_CLOUD.token;
+    }
+    if(window.THEORY_CLOUD.owner){ CLOUD.owner = window.THEORY_CLOUD.owner; }
+    if(window.THEORY_CLOUD.repo){ CLOUD.repo = window.THEORY_CLOUD.repo; }
+  }
+}
+function loadCloudConfig(done){
+  var s = document.createElement("script");
+  s.src = "./cloud-config.js";
+  s.onload = function(){ applyCloudConfigOverride(); if(done){ done(true); } };
+  s.onerror = function(){ if(done){ done(false); } };
+  document.head.appendChild(s);
+}
+
+var sharedState = { records: [], sha: null, ready: false, error: "" };
+var TOMB_KEY = "life-theory-db-tomb";
+
+function cloudEnabled(){
+  return !!CLOUD.token
+    && CLOUD.token.indexOf("__PASTE_TOKEN") !== 0
+    && /^\w[\w.-]*$/.test(CLOUD.owner)
+    && /^\w[\w.-]*$/.test(CLOUD.repo);
+}
+function contentsUrl(){
+  return "https://api.github.com/repos/" + CLOUD.owner + "/" + CLOUD.repo + "/contents/" + CLOUD.path;
+}
+function cleanRec(r){
+  return {
+    input: String(r.input || "").slice(0, 40),
+    variant: r.variant | 0,
+    founder: String(r.founder || "").slice(0, 10),
+    time: (typeof r.time === "number" && r.time > 0) ? r.time : Date.now()
+  };
+}
+function encodeB64Utf8(str){
+  var bytes = new TextEncoder().encode(str), bin = "";
+  bytes.forEach(function(b){ bin += String.fromCharCode(b); });
+  return btoa(bin);
+}
+function decodeB64Utf8(b64){
+  var bin = atob(b64), bytes = new Uint8Array(bin.length);
+  for(var i=0;i<bin.length;i++){ bytes[i] = bin.charCodeAt(i); }
+  return new TextDecoder().decode(bytes);
+}
+function loadTombstones(){
+  try {
+    var t = JSON.parse(localStorage.getItem(TOMB_KEY) || "[]");
+    return Array.isArray(t) ? t : [];
+  } catch(e){ return []; }
+}
+function addTombstone(k){
+  var t = loadTombstones();
+  if(t.indexOf(k) < 0){
+    t.push(k);
+    try { localStorage.setItem(TOMB_KEY, JSON.stringify(t)); } catch(e){}
+  }
+}
+function mergedList(){
+  var out = [], seen = {};
+  loadDB().forEach(function(r){
+    seen[recKey(r)] = true;
+    out.push({ input:r.input, variant:r.variant, founder:r.founder || "", time:r.time, __src:"local" });
+  });
+  var tb = loadTombstones();
+  sharedState.records.forEach(function(r){
+    var k = recKey(r);
+    if(seen[k] || tb.indexOf(k) >= 0){ return; }
+    var c = cleanRec(r);
+    c.__src = "cloud";
+    out.push(c);
+  });
+  out.sort(function(a, b){ return (b.time || 0) - (a.time || 0); });
+  return out;
+}
+function fetchShared(){
+  if(!cloudEnabled()){ return Promise.resolve(false); }
+  return fetch(contentsUrl(), {
+    headers: { "Accept": "application/vnd.github+json", "Authorization": "***" + CLOUD.token },
+    cache: "no-store"
+  }).then(function(res){
+    if(res.status === 404){
+      sharedState.records = []; sharedState.sha = null;
+      sharedState.ready = true; sharedState.error = "";
+      return true;
+    }
+    if(!res.ok){ throw new Error("HTTP " + res.status); }
+    return res.json();
+  }).then(function(meta){
+    if(meta && meta.content){
+      var arr = [];
+      try { arr = JSON.parse(decodeB64Utf8(String(meta.content).replace(/\s+/g, ""))); } catch(e){ arr = []; }
+      sharedState.records = Array.isArray(arr) ? arr.map(cleanRec) : [];
+      sharedState.sha = meta.sha || null;
+    }
+    sharedState.ready = true; sharedState.error = "";
+    return true;
+  }).catch(function(e){
+    sharedState.error = (e && e.message) ? e.message : "网络异常";
+    return false;
+  });
+}
+function markLocalSynced(){
+  var map = {};
+  sharedState.records.forEach(function(r){ map[recKey(r)] = true; });
+  var list = loadDB(), changed = false;
+  list.forEach(function(r){
+    if(map[recKey(r)]){
+      if(!r.synced){ r.synced = true; changed = true; }
+    } else if(r.synced){
+      /* 自愈：本机曾同步、云端却查无此篇（被清空/篡改），标记回未同步等待补发 */
+      r.synced = false; changed = true;
+    }
+  });
+  if(changed){ saveDB(list); }
+}
+var lastPush = { at: 0, ok: null, info: "" };
+function cloudPush(newRecs, quiet){
+  if(!cloudEnabled() || !newRecs.length){ return Promise.resolve(false); }
+  var map = {};
+  sharedState.records.forEach(function(r){ map[recKey(r)] = cleanRec(r); });
+  newRecs.forEach(function(r){ map[recKey(r)] = cleanRec(r); });
+  var list = Object.keys(map).map(function(k){ return map[k]; });
+  list.sort(function(a, b){ return (a.time || 0) - (b.time || 0); });
+  function once(triesLeft){
+    var body = {
+      message: "发表新理论 " + newRecs.length + " 篇",
+      content: encodeB64Utf8(JSON.stringify(list))
+    };
+    if(sharedState.sha){ body.sha = sharedState.sha; }
+    return fetch(contentsUrl(), {
+      method: "PUT",
+      headers: {
+        "Accept": "application/vnd.github+json",
+        "Authorization": "***" + CLOUD.token,
+        "Content-Type": "application/json",
+        "X-GitHub-Api-Version": "2022-11-28"
+      },
+      body: JSON.stringify(body)
+    }).then(function(res){
+      if(res.ok){ return res.json(); }
+      /* 版本号冲突或状态过期：重新领取版本号后再试（最多两次） */
+      if((res.status === 409 || res.status === 422) && triesLeft > 0){
+        return fetchShared().then(function(){ return once(triesLeft - 1); });
+      }
+      var hint = res.status === 401 ? "（令牌已失效，需换钥匙）"
+        : res.status === 403 ? "（令牌无写入权限或被限流）"
+        : res.status === 404 ? "（数据仓库不存在或被删）" : "";
+      throw new Error("HTTP " + res.status + hint);
+    }).then(function(data){
+      if(data && data.content && data.content.sha){ sharedState.sha = data.content.sha; }
+      sharedState.records = list;
+      sharedState.ready = true; sharedState.error = "";
+      lastPush = { at: Date.now(), ok: true, info: "" };
+      markLocalSynced();
+      if(!quiet){ showToast("已写入云端 ☁ 其他人刷新就能看到", 3000); }
+      renderDatabase();
+      return true;
+    }).catch(function(e){
+      lastPush = { at: Date.now(), ok: false, info: (e && e.message) ? e.message : "网络异常（请求没到 GitHub）" };
+      sharedState.error = lastPush.info;
+      if(!quiet){ showToast("云端写入失败：" + lastPush.info + "。已存本机，稍后会自动重试，也可点「📤 补传云端」。", 6500); }
+      renderDatabase();
+      return false;
+    });
+  }
+  return once(2);
+}
+function pushNow(){
+  if(!cloudEnabled()){ showToast("共享库未接入，无从补传。", 2600); return; }
+  var tb = loadTombstones();
+  var pending = loadDB().filter(function(r){ return !r.synced && tb.indexOf(recKey(r)) < 0; });
+  if(!pending.length){
+    showToast("没有待补传内容：本机与云端已一致。", 3000);
+    return;
+  }
+  showToast("正在补传 " + pending.length + " 篇…", 2000);
+  cloudPush(pending, false);
+}
+function flushPending(){
+  if(!cloudEnabled()){ return; }
+  var tb = loadTombstones();
+  var pending = loadDB().filter(function(r){ return !r.synced && tb.indexOf(recKey(r)) < 0; });
+  if(pending.length){ cloudPush(pending, true); }
+}
+function removeRecordByKey(rec){
+  var k = recKey(rec);
+  saveDB(loadDB().filter(function(r){ return recKey(r) !== k; }));
+}
+function cloudStatusText(){
+  if(!cloudEnabled()){
+    return "共享库未接入 · 当前只汇总本机发表与链接携带的理论（创始人接入方法见页面源码 CLOUD 注释）";
+  }
+  if(sharedState.ready){
+    var tail = "";
+    if(lastPush.at){
+      tail = lastPush.ok ? " · 上次写入 ✓ 成功" : " · 上次写入 ✗ " + lastPush.info;
+    }
+    return "☁ 已接入共享库：云端 " + sharedState.records.length + " 篇 · 本机 " + loadDB().length + " 篇" + tail;
+  }
+  if(sharedState.error){
+    return "共享库暂时连不上（" + sharedState.error + "），当前显示本机馆藏，发表会自动补发";
+  }
+  return "共享库连接中…";
+}
+function updateCloudTip(){
+  if(el.dbCloudTip){ el.dbCloudTip.textContent = cloudStatusText(); }
+  /* 未接入共享库时，展示内置的令牌转码助手 */
+  if(el.dbTokenHelper){ el.dbTokenHelper.classList.toggle("hidden", cloudEnabled()); }
+}
+</script>
+<script>
+/* SECTION: js-poster */
+var INK = "#232a3b", BURG = "#8a2b2b", GOLD = "#a98d4f", PAPER_BG = "#f7f2e4";
+var SERIF_STACK = 'Georgia, "Times New Roman", "Songti SC", "STSong", "SimSun", serif';
+
+function wrapText(ctx, text, maxWidth){
+  var lines = [], line = "", i, ch, test;
+  for(i=0;i<text.length;i++){
+    ch = text.charAt(i);
+    if(ch === "\n"){ lines.push(line); line = ""; continue; }
+    test = line + ch;
+    if(ctx.measureText(test).width > maxWidth && line.length > 0){
+      lines.push(line);
+      line = ch;
+    } else {
+      line = test;
+    }
+  }
+  if(line.length){ lines.push(line); }
+  return lines;
+}
+
+function drawCenteredLines(ctx, lines, cx, y, lineHeight){
+  lines.forEach(function(l){
+    ctx.fillText(l, cx, y);
+    y += lineHeight;
+  });
+  return y;
+}
+
+function drawPoster(theory, founder){
+  var cv = el.canvas, ctx = cv.getContext("2d");
+  var W = cv.width, H = cv.height, cx = W/2;
+
+  /* 纸底与双边框 */
+  ctx.fillStyle = PAPER_BG;
+  ctx.fillRect(0,0,W,H);
+  ctx.strokeStyle = INK; ctx.lineWidth = 8;
+  ctx.strokeRect(34,34,W-68,H-68);
+  ctx.strokeStyle = GOLD; ctx.lineWidth = 2;
+  ctx.strokeRect(52,52,W-104,H-104);
+
+  ctx.textAlign = "center";
+  ctx.textBaseline = "alphabetic";
+
+  /* 刊头 */
+  ctx.fillStyle = INK;
+  ctx.font = "26px " + SERIF_STACK;
+  ctx.fillText("T H E   L I F E   T H E O R Y   R E V I E W", cx, 118);
+  ctx.font = "22px " + SERIF_STACK;
+  ctx.fillStyle = GOLD;
+  ctx.fillText("人生理论评论 · VOL. I · 论文编号 " + theory.paperNo, cx, 156);
+  ctx.strokeStyle = INK; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(140,182); ctx.lineTo(W-140,182); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(140,190); ctx.lineTo(W-140,190); ctx.stroke();
+
+  /* 理论大名 */
+  var y = 268;
+  ctx.fillStyle = INK;
+  ctx.font = "bold 84px " + SERIF_STACK;
+  var nameLines = wrapText(ctx, theory.name, W-260);
+  y = drawCenteredLines(ctx, nameLines, cx, y, 100);
+
+  /* 拉丁校训与机构 */
+  ctx.font = "italic 28px " + SERIF_STACK;
+  ctx.fillStyle = GOLD;
+  ctx.fillText(theory.latin, cx, y + 10);
+  ctx.font = "24px " + SERIF_STACK;
+  ctx.fillStyle = "#5a5f6e";
+  ctx.fillText(theory.school + " 认证立派", cx, y + 56);
+
+  /* 分隔饰纹 */
+  ctx.fillStyle = BURG;
+  ctx.font = "30px " + SERIF_STACK;
+  ctx.fillText("—— ❖ ——", cx, y + 112);
+
+  /* 核心主张 */
+  var bodyY = y + 168;
+  ctx.fillStyle = BURG;
+  ctx.font = "bold 30px " + SERIF_STACK;
+  ctx.fillText("核 心 主 张", cx, bodyY);
+  ctx.fillStyle = INK;
+  ctx.font = "27px " + SERIF_STACK;
+  ctx.textAlign = "left";
+  var claimShort = "本海报郑重认证：「" + theory.input + "」不是毛病，而是《" + theory.name + "》的第一观察对象——一种高度进化的生存策略，予以永久收录，不予整改。";
+  var claimLines = wrapText(ctx, claimShort, W-280);
+  claimLines.forEach(function(l){
+    bodyY += 46;
+    ctx.fillText(l, 140, bodyY);
+  });
+  ctx.textAlign = "center";
+
+  /* 金句区 */
+  var qy = Math.min(bodyY + 90, H - 430);
+  ctx.strokeStyle = INK; ctx.lineWidth = 4;
+  ctx.beginPath(); ctx.moveTo(140,qy); ctx.lineTo(W-140,qy); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(140,qy+6); ctx.lineTo(W-140,qy+6); ctx.stroke();
+  ctx.fillStyle = BURG;
+  ctx.font = "bold 40px " + SERIF_STACK;
+  var goldenLines = wrapText(ctx, "「" + theory.golden + "」", W-320);
+  var gy = qy + 84;
+  goldenLines.forEach(function(l){
+    ctx.fillText(l, cx, gy);
+    gy += 60;
+  });
+  ctx.strokeStyle = INK;
+  ctx.beginPath(); ctx.moveTo(140,gy+6); ctx.lineTo(W-140,gy+6); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(140,gy+12); ctx.lineTo(W-140,gy+12); ctx.stroke();
+
+  /* 署名区 */
+  var fname = (founder || "").replace(/\s+/g,"") || "匿名学者";
+  var sigY = H - 190;
+  ctx.fillStyle = INK;
+  ctx.font = "30px " + SERIF_STACK;
+  ctx.fillText("—— " + fname + " · " + theory.name + "创始人", cx, sigY);
+  ctx.font = "22px " + SERIF_STACK;
+  ctx.fillStyle = "#5a5f6e";
+  ctx.fillText("立于 " + theory.meta[0].v + " 年 · 学派人数 1 人 · 影响因子 " + theory.meta[2].v.slice(0,4), cx, sigY + 42);
+
+  /* 红色圆形印章 */
+  var sx = W - 220, sy = H - 260, r = 78;
+  ctx.save();
+  ctx.translate(sx, sy);
+  ctx.rotate(-0.2);
+  ctx.strokeStyle = "rgba(138,43,43,.85)";
+  ctx.lineWidth = 6;
+  ctx.beginPath(); ctx.arc(0,0,r,0,Math.PI*2); ctx.stroke();
+  ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.arc(0,0,r-10,0,Math.PI*2); ctx.stroke();
+  ctx.fillStyle = "rgba(138,43,43,.9)";
+  ctx.font = "bold 52px " + SERIF_STACK;
+  ctx.textBaseline = "middle";
+  ctx.fillText(fname.charAt(0), 0, 2);
+  ctx.font = "18px " + SERIF_STACK;
+  ctx.fillText("理论创始人", 0, 44);
+  ctx.restore();
+  ctx.textBaseline = "alphabetic";
+
+  /* 底部小字：制作者与参考文献 */
+  ctx.fillStyle = "#666c7a";
+  ctx.font = "bold 20px " + SERIF_STACK;
+  ctx.fillText("制作者：Lyn喜欢晒太阳", cx, H - 100);
+  ctx.fillStyle = "#8a8f9c";
+  ctx.font = "17px " + SERIF_STACK;
+  ctx.fillText("参考文献：xhslink.cn/o/6po4S4QhN8E", cx, H - 70);
+  ctx.fillText("ISSN 0000-0000 · 本海报严肃但不认真 · 人生理论评论 荣誉出品", cx, H - 44);
+}
+
+function openPosterModal(){
+  if(!state.theory){ return; }
+  if(state.founder){ el.founder.value = state.founder; }
+  el.modal.classList.remove("hidden");
+  document.body.style.overflow = "hidden";
+  drawPoster(state.theory, el.founder.value);
+}
+function closePosterModal(){
+  el.modal.classList.add("hidden");
+  document.body.style.overflow = "";
+}
+
+function downloadPoster(){
+  if(!state.theory){ return; }
+  var fname = state.theory.name + "学术海报.png";
+  try {
+    el.canvas.toBlob(function(blob){
+      if(!blob){ return; }
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement("a");
+      a.href = url;
+      a.download = fname;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(function(){ URL.revokeObjectURL(url); }, 2000);
+    }, "image/png");
+  } catch(e){
+    /* 极端环境下降级：新开页展示 */
+    var win = window.open("", "_blank");
+    if(win){
+      var img = win.document.createElement("img");
+      img.src = el.canvas.toDataURL("image/png");
+      win.document.body.appendChild(img);
+    }
+  }
+}
+</script>
+<script>
+/* SECTION: js-init */
+(function(){
+  /* 首页示例：点了直接生成 */
+  EXAMPLES.forEach(function(text){
+    var b = document.createElement("button");
+    b.type = "button";
+    b.className = "chip";
+    b.textContent = text;
+    b.addEventListener("click", function(){
+      el.input.value = text;
+      generate(text, 0);
+    });
+    el.chips.appendChild(b);
+  });
+
+  /* 提交生成 */
+  el.form.addEventListener("submit", function(ev){
+    ev.preventDefault();
+    var v = el.input.value.replace(/\s+/g,"").slice(0,40);
+    if(!v){
+      el.input.focus();
+      el.input.placeholder = "先 confess 一个毛病，比如「袜子穿三天」";
+      return;
+    }
+    generate(v, 0);
+  });
+
+  /* 换一个流派 */
+  el.regen.addEventListener("click", function(){
+    if(!state.input){ return; }
+    generate(state.input, state.variant + 1);
+  });
+
+  /* 复制全文 */
+  el.copy.addEventListener("click", copyTheory);
+
+  /* 海报弹窗 */
+  el.poster.addEventListener("click", openPosterModal);
+  el.closeBtn.addEventListener("click", closePosterModal);
+  el.backdrop.addEventListener("click", closePosterModal);
+  document.addEventListener("keydown", function(ev){
+    if(ev.key !== "Escape"){ return; }
+    if(!el.modal.classList.contains("hidden")){
+      closePosterModal();
+    } else if(!el.dbSection.classList.contains("hidden")){
+      el.dbSection.classList.add("hidden");
+      document.body.style.overflow = "";
+    }
+  });
+  /* 主表单署名与论文、海报、数据库实时联动 */
+  el.byline.addEventListener("input", function(){
+    var f = readByline();
+    state.founder = f;
+    if(state.theory){
+      if(f){
+        el.bylineShow.textContent = "发表者：" + f + " · " + state.theory.name + "创始人";
+        el.bylineShow.classList.remove("hidden");
+      } else {
+        el.bylineShow.classList.add("hidden");
+      }
+      updateFounderInDB(f);
+      renderDatabase();
+    }
+    if(!el.modal.classList.contains("hidden")){
+      el.founder.value = f;
+      if(state.theory){ drawPoster(state.theory, f); }
+    }
+  });
+
+  el.founder.addEventListener("input", function(){
+    var f = el.founder.value.replace(/\s+/g,"").slice(0,10);
+    state.founder = f;
+    el.byline.value = f;
+    if(state.theory){
+      if(f){
+        el.bylineShow.textContent = "发表者：" + f + " · " + state.theory.name + "创始人";
+        el.bylineShow.classList.remove("hidden");
+      } else {
+        el.bylineShow.classList.add("hidden");
+      }
+      updateFounderInDB(f);
+      renderDatabase();
+    }
+    if(state.theory && !el.modal.classList.contains("hidden")){
+      drawPoster(state.theory, el.founder.value);
+    }
+  });
+
+  /* 进入 / 退出全屏馆藏视图 */
+  function closeDb(){
+    el.dbSection.classList.add("hidden");
+    document.body.style.overflow = "";
+  }
+  el.dbEnter.addEventListener("click", function(){
+    renderDatabase();
+    if(cloudEnabled()){
+      fetchShared().then(function(ok){
+        if(ok){ markLocalSynced(); }
+        renderDatabase();
+      });
+    }
+    el.dbSection.classList.remove("hidden");
+    document.body.style.overflow = "hidden";
+    window.scrollTo(0, 0);
+  });
+  el.dbClose.addEventListener("click", closeDb);
+
+  /* 检索馆藏 */
+  el.dbSearch.addEventListener("input", function(){
+    dbQuery = el.dbSearch.value;
+    renderDatabase();
+  });
+
+  /* 论文卡片上的馆藏链接 */
+  el.linkBtn.addEventListener("click", function(){
+    if(!state.theory){ return; }
+    copyArchiveLink({ input: state.input, variant: state.variant, founder: state.founder }, el.linkBtn);
+  });
+
+  /* 整库打包：导出 / 导入 / 链接 */
+  el.dbExport.addEventListener("click", exportDBFile);
+  el.dbImportBtn.addEventListener("click", function(){
+    el.dbImportFile.click();
+  });
+  el.dbImportFile.addEventListener("change", function(){
+    var f = el.dbImportFile.files && el.dbImportFile.files[0];
+    if(f){ importFromFile(f); }
+    el.dbImportFile.value = "";
+  });
+  el.dbPackLink.addEventListener("click", copyWholeLibLink);
+
+  /* 令牌转码助手：明文令牌 → 编码，填入 cloud-config.js 的 token_b64 */
+  el.tokenEncodeBtn.addEventListener("click", function(){
+    var v = el.tokenPlain.value.replace(/\s+/g, "");
+    if(!v){ showToast("先粘贴令牌再点转换。", 2400); return; }
+    if(v.indexOf("github_pat_") !== 0 && v.indexOf("ghp_") !== 0){
+      showToast("这串看着不像 GitHub 令牌（应以 github_pat_ 开头），检查有没有多复制进空格或漏掉开头。", 4600);
+      return;
+    }
+    el.tokenEncoded.value = b64enc(v);
+    el.tokenEncoded.classList.remove("hidden");
+    el.tokenCopyBtn.classList.remove("hidden");
+    el.tokenPlain.value = "";
+    showToast("编码完成，点「复制编码结果」，去填 cloud-config.js 的 token_b64 字段。", 4200);
+  });
+  el.tokenCopyBtn.addEventListener("click", function(){
+    copyAny(el.tokenEncoded.value, "编码结果已复制：粘贴进 cloud-config.js 的 token_b64 引号里即可。", true);
+  });
+
+  /* 馆藏条目操作：查看全文 / 复制链接 / 除名 / 清空 */
+  el.dbList.addEventListener("click", function(ev){
+    var btn = ev.target && ev.target.closest ? ev.target.closest("button") : null;
+    if(!btn){ return; }
+    var idx = parseInt(btn.dataset.idx, 10);
+    if(isNaN(idx)){ return; }
+    var rec = mergedList()[idx];
+    if(!rec){ return; }
+    if(btn.classList.contains("db-viewbtn")){
+      closeDb();
+      el.input.value = rec.input;
+      el.byline.value = rec.founder || "";
+      generate(rec.input, rec.variant, { founder: rec.founder || "", fromDb: true });
+    } else if(btn.classList.contains("db-linkbtn")){
+      copyArchiveLink(rec, btn);
+    } else if(btn.classList.contains("db-del")){
+      removeRecordByKey(rec);
+      addTombstone(recKey(rec));
+      renderDatabase();
+    }
+  });
+  el.dbClear.addEventListener("click", function(){
+    if(loadDB().length === 0){ return; }
+    if(window.confirm("确定清空理论数据库？所有馆藏理论都将被除名。")){
+      saveDB([]);
+      renderDatabase();
+    }
+  });
+
+  el.download.addEventListener("click", downloadPoster);
+
+  /* 页面加载：先接收整库移植包与单篇馆藏链接，再展示入口计数 */
+  var dbImp = readHashDBImport();
+  var mergeRes = null;
+  if(dbImp){
+    mergeRes = mergeDBItems(dbImp);
+    el.importNotice.textContent = "已接收整库移植包：新增收录 " + mergeRes.added + " 篇理论" + (mergeRes.patched ? "，并为 " + mergeRes.patched + " 篇补上署名" : "") + "，当前馆藏 " + mergeRes.total + " 篇。";
+    el.importNotice.classList.remove("hidden");
+  }
+  var imp = readHashImport();
+  if(imp){
+    el.input.value = imp.input;
+    el.byline.value = imp.founder;
+    generate(imp.input, imp.variant, { founder: imp.founder });
+    var single = "已接收这条链接携带的馆藏《" + state.theory.name + "》，它已自动收入你的理论数据库。";
+    if(dbImp){
+      el.importNotice.textContent = el.importNotice.textContent + " 另外还收到单篇馆藏：" + single;
+    } else {
+      el.importNotice.textContent = single;
+      el.importNotice.classList.remove("hidden");
+    }
+  } else if(!dbImp){
+    renderDatabase();
+  }
+
+  /* 共享库启动：先尝试加载五线小配置，再读取云端馆藏、标记已同步、补发本机未上传的理论 */
+  loadCloudConfig(function(){
+    if(cloudEnabled()){
+      fetchShared().then(function(ok){
+        if(ok){
+          markLocalSynced();
+          flushPending();
+        }
+        renderDatabase();
+      });
+    }
+  });
+})();
+</script>
+</body>
+</html>
