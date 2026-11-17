@@ -1027,7 +1027,12 @@ function mergeDBItems(items){
   var list = loadDB();
   var added = 0, patched = 0;
   items.forEach(function(it){
-    if(!it || typeof it.input !== "string" || !it.input){ return; }
+    if(!it){ return; }
+    /* 兼容两种格式：旧 {input,variant,founder,time} 与新紧凑 {i,v,f,t(分钟)} */
+    if(typeof it.input !== "string" && typeof it.i === "string"){
+      it = { input: it.i, variant: it.v, founder: it.f, time: (typeof it.t === "number" ? it.t * 60000 : 0) };
+    }
+    if(typeof it.input !== "string" || !it.input){ return; }
     var rec = {
       input: it.input.slice(0, 40),
       variant: it.variant | 0,
@@ -1069,10 +1074,27 @@ function importFromFile(file){
 function wholeLibLink(){
   var list = mergedList();
   if(!list.length){ return null; }
+  /* 紧凑编码：i=课题 v=流派 f=署名 t=收录时间(分钟级)，容量约为旧格式两倍 */
   var payload = JSON.stringify(list.map(function(r){
-    return { input: r.input, variant: r.variant, founder: r.founder || "" };
+    return { i: r.input, v: r.variant | 0, f: r.founder || "", t: Math.floor((r.time || Date.now()) / 60000) };
   }));
   return location.href.split("#")[0] + "#db=" + b64enc(payload);
+}
+function autoCopyWholeLink(){
+  var url = wholeLibLink();
+  if(!url){ return; }
+  if(url.length > 7000){
+    showToast("已发表 ✓ 馆藏较多，整库链接超长——进数据库点「导出馆藏文件」发群更稳。", 5200);
+    return;
+  }
+  function done(okMsg){
+    showToast(okMsg || "已发表 ✓ 最新整库链接已复制到剪贴板：直接粘贴发群，朋友点开即同步全部馆藏。", 5600);
+  }
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(url).then(function(){ done(); }, function(){ fallbackCopy(url, done); });
+  } else {
+    fallbackCopy(url, done);
+  }
 }
 function copyWholeLibLink(){
   var url = wholeLibLink();
