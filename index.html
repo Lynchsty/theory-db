@@ -796,7 +796,9 @@ function generate(input, variant, opts){
     var rec = { input:input, variant:variant, founder:founder, time:Date.now() };
     addRecord(rec);
     renderDatabase();
-    if(cloudEnabled()){ cloudPush([rec], false); }
+    if(cloudEnabled()){ cloudPush([rec], true); }
+    /* Plan C 主通道：发表即自动复制最新整库链接，粘到群里就是"活体数据库" */
+    autoCopyWholeLink();
   }
   el.section.scrollIntoView({ behavior:"smooth", block:"start" });
 }
